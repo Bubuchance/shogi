@@ -88,7 +88,7 @@ char Ss;
 int main(int argc,char *argv[]){
 	//getopt
 	opterr=0;
-	while((ch=getopt(argc,argv,"ns:l:"))!=1){
+	while((ch=getopt(argc,argv,"ns:l:"))!=-1){
 		switch(ch){
 			case 'n':
 				//printf("-n被印出");
