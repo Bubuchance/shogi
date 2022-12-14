@@ -137,17 +137,17 @@ int main(int argc,char *argv[]){
 			}
 			isGameOver();
 		}
-		printf("請輸入s或S儲存此局");
+		scanf("%c",&Ss);
+		printf("請輸入s或S儲存此局\n");
 		scanf("%c",&Ss);
 		if(Ss=='s'||Ss=='S'){
-			if((fptr=fopen("Review.txt","w"))==NULL){
-				printf("已有此檔案名\n");
-			}
-			else{
-				for(top==0;top<500;top++){
-					fprintf(fptr,"%d %d %d %d",stack[top].x1,stack[top].y1,stack[top].x2,stack[top].y2);
+			for(top=0;top<500;top++){
+				if((stack[top].x1==0)&&(stack[top].y1==0)&&(stack[top].x2==0)&&(stack[top].y2==0)){
+					break;
 				}
-				fclose(fptr);
+				else{
+					fprintf(fptr,"%d %d %d %d %s %s\n",stack[top].x1,stack[top].y1,stack[top].x2,stack[top].y2,stack[top].p0,stack[top].p1);
+				}
 			}
 		}
 		else{
@@ -155,51 +155,44 @@ int main(int argc,char *argv[]){
 		}
 	}
 	else if(NeworOld==1){
-		if((fptr=fopen("Review.txt","r"))==NULL){
-			printf("File can not be opened.\n");
+		for(top=0;!feof(fptr);top++){
+			fscanf(fptr,"%d %d %d %d %s %s\n",&(stack[top].x1),&(stack[top].y1),&(stack[top].x2),&(stack[top].y2),(stack[top].p1),(stack[top].p0));
 		}
-		else{
-			//從這裡寫沒電了Q
-			InitGame();
-			PrintChess();
-			int data=top;//暫存棋盤筆數
-			top=0;
-			char order;//輸入字元
-			while(top<=data){
-				printf("請輸入移至上一手或下一手(b為退回上一手,f為移至下一手):\n");
-				scanf("%c",&order);
-				if(order=='b'){
-					if(top==0){
-						printf("此已為第一筆資料\n");
-						break;
-					}
-					else{
-						top--;
-						fscanf(fptr,"%d %d %d %d",&(stack[top].x1),&(stack[top].y1),&(stack[top].x2),&(stack[top].y2));
-						PrintChess();
-					}
-
+		InitGame();
+		PrintChess();
+		int data=top;//暫存棋盤筆數
+		printf("%d\n",data);//test
+		top=-1;
+		char order;//輸入字元
+		while(top<=data){
+			printf("請輸入移至上一手或下一手(b為退回上一手,f為移至下一手):\n");
+			scanf("%c",&order);
+			if(order=='b'){
+				if(top==-1){
+					printf("已為初始棋盤\n");
 				}
-				else if(order=='f'){
-					if(top==data){
-						printf("此已為最後一筆資料\n");
-						break;
-					}
-					else{
-						top++;
-						fscanf(fptr,"%d %d %d %d",&(stack[top].x1),&(stack[top].y1),&(stack[top].x2),&(stack[top].y2));
-						PrintChess();
-					}
-
+				else{
+					top--;
+					//fscanf(fptr,"%d %d %d %d %s %s",&(stack[top].x1),&(stack[top].y1),&(stack[top].x2),&(stack[top].y2),(stack[top].p1),(stack[top].p0));
+					PrintChess();
 				}
 			}
-
+			else if(order=='f'){
+				if(top==data){
+					printf("此已為最後一筆資料\n");
+					break;
+				}
+				else{
+					top++;
+					//fscanf(fptr,"%d %d %d %d %s %s",&(stack[top].x1),&(stack[top].y1),&(stack[top].x2),&(stack[top].y2),(stack[top].p1),(stack[top].p0));
+					PrintChess();
+				}
+			}
 		}
-		fclose(fptr);
-	return 0;
 	}
+	fclose(fptr);
+	return 0;
 }
-
 
 //初始化棋盤
 void InitGame(){
@@ -240,7 +233,7 @@ void InitGame(){
 	chess_board[8][2]=chess_board[8][6]=B(銀); 
 	chess_board[8][3]=chess_board[8][5]=B(金);
 	chess_board[8][4]=B(玉);	
-} 
+}
 
 
 //印製棋盤
@@ -288,12 +281,12 @@ void* pop(){
 //放入資料
 void push(int x1,int y1,int x2,int y2,char* p0,char* p1){
 	top++;
-	stack[top].x1=xi;
-	stack[top].x2=xj;
-	stack[top].y1=yi;
-	stack[top].y2=yj;
-	stack[top].p0=chess_board[xi][yi];
-	stack[top].p1=chess_board[xj][yj];
+	stack[top].x1=x1;
+	stack[top].x2=x2;
+	stack[top].y1=y1;
+	stack[top].y2=y2;
+	stack[top].p0=p0;
+	stack[top].p1=p1;
 	if(top==STACKSIZE-1){
 		peace();
 	}
@@ -316,10 +309,17 @@ void bluemove(){
 			printf("是否真的悔棋？(0:真的,其他:否)\n");
 			scanf("%d",&i);
 			if(i==0){
-				temp=pop();
-				chess_board[temp->x1][temp->y1]=temp->p0;
-				chess_board[temp->x1][temp->y1]=temp->p0;
-				PrintChess();
+				if(top==0){
+					pop();
+					InitGame();
+					PrintChess();
+				}
+				else{
+					temp=pop();
+					chess_board[temp->x1][temp->y1]=temp->p0;
+					chess_board[temp->x2][temp->y2]=temp->p1;
+					PrintChess();
+				}
 			}
 			else{
 				turn *=-1;
@@ -358,10 +358,17 @@ void redmove(){
 			printf("是否真的悔棋？(0:真的,其他:否)\n");
 			scanf("%d",&i);
 			if(i==0){
-				temp=pop();
-				chess_board[temp->x1][temp->y1]=temp->p0;
-				chess_board[temp->x1][temp->y1]=temp->p0;
-				PrintChess();
+				if(top==0){
+					pop();
+					InitGame();
+					PrintChess();
+				}
+				else{
+					temp=pop();
+					chess_board[temp->x1][temp->y1]=temp->p0;
+					chess_board[temp->x2][temp->y2]=temp->p1;
+					PrintChess();
+				}
 			}
 			else{
 				turn *=-1;
@@ -421,9 +428,9 @@ void blue_rule(){
 					restart=1;
 				}
 				else{
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 					chess_board[xi][yi]="  ";
 					chess_board[xj][yj]=B(步);
-					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 				}
 			}
 			else{
@@ -432,43 +439,37 @@ void blue_rule(){
 		}
 		//B(香)
 		if(chess_board[xi][yi]==B(香)){
-			if(yi!=yj){
+			if(yi!=yj||xj>=xi){
 				restart=1;
 			}
 			else{
-				for(int i=xi+1;i<xj;i++){
-					if(chess_board[i][yi]!="  "){
-						isStandard =0;
-					}
-				} 
 				for(int i=xi-1;i>xj;i--){
 					if(chess_board[i][yi]!="  "){
-						isStandard =0;
+						restart =1;
+						isStandard=0;
 					}
 				} 
 				if(chess_board[xj][yi]==B(步)||chess_board[xj][yi]==B(香)||chess_board[xj][yi]==B(桂)||chess_board[xj][yi]==B(銀)||chess_board[xj][yi]==B(金)||chess_board[xj][yi]==B(玉)||chess_board[xj][yi]==B(角)||chess_board[xj][yi]==B(飛)){
-					isStandard =0;
+					restart=1;
 				}  
-				if(isStandard ==1){
+				else if(isStandard!=0){
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 					chess_board[xi][yi]="  ";
 					chess_board[xj][yj]=B(香);
-					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
-				}
-				else{
-					restart =1;
+					restart=0;
 				}
 			}
 		}
 		//B(桂)
-		if(chess_board[xi][yi]==R(桂)){
+		if(chess_board[xi][yi]==B(桂)){
 			if((xj==xi-2&&yj==yi-1)||(xj==xi-2&&yj==yi+1)){
-				if(chess_board[xj][yi]==B(步)||chess_board[xj][yi]==B(香)||chess_board[xj][yi]==B(桂)||chess_board[xj][yi]==B(銀)||chess_board[xj][yi]==B(金)||chess_board[xj][yi]==B(玉)||chess_board[xj][yi]==B(角)||chess_board[xj][yi]==B(飛)){
+				if(chess_board[xj][yj]==B(步)||chess_board[xj][yj]==B(香)||chess_board[xj][yj]==B(桂)||chess_board[xj][yj]==B(銀)||chess_board[xj][yj]==B(金)||chess_board[xj][yj]==B(玉)||chess_board[xj][yj]==B(角)||chess_board[xj][yj]==B(飛)){
 					restart=1;
 				}
 				else{
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 					chess_board[xi][yi]="  ";
 					chess_board[xj][yj]=B(桂);
-					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 				}
 			}
 			else{
@@ -483,9 +484,9 @@ void blue_rule(){
 					restart=1;
 				}
 				else{
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 					chess_board[xi][yi]="  ";
 					chess_board[xj][yj]=B(銀);
-					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 				}
 			}
 			else{
@@ -499,9 +500,9 @@ void blue_rule(){
 					restart=1;
 				}
 				else{
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 					chess_board[xi][yi]="  ";
 					chess_board[xj][yj]=B(金);
-					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 				}
 			}
 			else{
@@ -515,9 +516,9 @@ void blue_rule(){
 					restart=1;
 				}
 				else{
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 					chess_board[xi][yi]="  ";
 					chess_board[xj][yj]=B(玉);
-					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 				}
 			}
 			else{
@@ -526,94 +527,106 @@ void blue_rule(){
 		}
 		//B(角)
 		if(chess_board[xi][yi]==B(角)){
-			if(abs(yj-yi)==0){
+			int i,j;
+			if(yj-yi==0){
 				restart =1;
 			}
-			else{
-				if(abs(xj-xi)/abs(yj-yi)==1){
-					int i,j;
-					if(yi>yi){
-						for(i=xi-1,j=yi+1;i>xj;i--,j++){
-							if(chess_board[i][j]!="  "){
-								isStandard =0;
-							}
-						}
-						for(i=xi+1,j=yi+1;i<xj;i++,j++){
-							if(chess_board[i][j]!="  "){
-								isStandard =0;
-							}
+			else if(abs(xj-xi)/abs(yj-yi)==1){
+				if(yj>yi){
+					//右上
+					for(i=xi-1,j=yi+1;i>xj;i--,j++){
+						if(chess_board[i][j]!="  "){
+							restart=1;
+							isStandard =0;
 						}
 					}
-					else if(yj<yi){
-						for(i=xi-1,j=yi+1;i>xj;i--,j--){
-							if(chess_board[i][j]!="  "){
-								isStandard =0;
-							}
+					//右下
+					for(i=xi+1,j=yi+1;i<xj;i++,j++){
+						if(chess_board[i][j]!="  "){
+							restart=1;
+							isStandard =0;
 						}
-						for(i=xi+1,j=yi+1;i<xj;i++,j--){
-							if(chess_board[i][j]!="  "){
-								isStandard =0;
-							}
-						}
-					}
-					if(chess_board[xj][yj]==B(步)||chess_board[xj][yj]==B(香)||chess_board[xj][yj]==B(桂)||chess_board[xj][yj]==B(銀)||chess_board[xj][yj]==B(金)||chess_board[xj][yj]==B(玉)||chess_board[xj][yj]==B(飛)){
-						isStandard =0;
-					}
-					if(isStandard==1){
-						chess_board[xi][yi]="  ";
-						chess_board[xj][yj]=B(角);
-						push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
-					}
-					else{
-						restart=1;
 					}
 				}
-				else{
+				else if(yj<yi){
+					for(i=xi-1,j=yi-1;i>xj;i--,j--){
+						if(chess_board[i][j]!="  "){
+							restart=1;
+							isStandard =0;
+						}
+					}
+					for(i=xi+1,j=yi-1;i<xj;i++,j--){
+						if(chess_board[i][j]!="  "){
+							restart=1;
+							isStandard =0;
+						}
+					}
+				}	
+				if(chess_board[xj][yj]==B(步)||chess_board[xj][yj]==B(香)||chess_board[xj][yj]==B(桂)||chess_board[xj][yj]==B(銀)||chess_board[xj][yj]==B(金)||chess_board[xj][yj]==B(玉)||chess_board[xj][yj]==B(飛)){
 					restart=1;
 				}
+				else if(isStandard!=0){
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
+					chess_board[xi][yi]="  ";
+					chess_board[xj][yj]=B(角);
+				}
+			}
+			else{
+				restart=1;
 			}
 		}
 		//B(飛)
 		if(chess_board[xi][yi]==B(飛)){
 			//列座標不變
-			if(yi==yj){
+			if(xi!=xj||yi!=yj){
+				restart =1;
+			}
+			else if(yi==yj){
 				for(int i=xi+1;i<xj;i++){
-					if(chess_board[i][yi]!="  "){
-						isStandard =0;
+					if(chess_board[i][yj]!="  "){
+						restart=1;
+						isStandard=0;
 					}
 				} 
 				for(int i=xi-1;i>xj;i--){
 					if(chess_board[i][yi]!="  "){
-						isStandard =0;
+						restart=1;
+						isStandard=0;
 					}
 				} 
-				if(chess_board[xj][yi]==B(步)||chess_board[xj][yi]==B(香)||chess_board[xj][yi]==B(桂)||chess_board[xj][yi]==B(銀)||chess_board[xj][yi]==B(金)||chess_board[xj][yi]==B(玉)||chess_board[xj][yi]==B(角)){
-					isStandard =0;
-				}  
+				if(chess_board[xj][yj]==B(步)||chess_board[xj][yj]==B(香)||chess_board[xj][yj]==B(桂)||chess_board[xj][yj]==B(銀)||chess_board[xj][yj]==B(金)||chess_board[xj][yj]==B(玉)||chess_board[xj][yj]==B(角)){
+					restart=1;
+				}
+				else if(isStandard!=0){
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
+					chess_board[xi][yi]="  ";
+					chess_board[xj][yj]=B(飛);
+					restart=0;
+				}
 			}
 			//行座標不變
 			else if(xi==xj){
 				for(int i=yi+1;i<yj;i++){
-					if(chess_board[xi][i]!="  "){
-						isStandard =0;
+					if(chess_board[xj][i]!="  "){
+						restart=1;
+						isStandard=0;
 					}
 				} 
 				for(int i=yi-1;i>yj;i--){
-					if(chess_board[xi][i]!="  "){
-						isStandard =0;
+					if(chess_board[xj][i]!="  "){
+						restart=1;
+						isStandard=0;					
 					}
 				} 
-				if(chess_board[xi][yj]==B(步)||chess_board[xi][yj]==B(香)||chess_board[xi][yj]==B(桂)||chess_board[xi][yj]==B(銀)||chess_board[xi][yj]==B(金)||chess_board[xi][yj]==B(玉)||chess_board[xi][yj]==B(角)){
-					isStandard =0;
+				if(chess_board[xj][yj]==B(步)||chess_board[xj][yj]==B(香)||chess_board[xj][yj]==B(桂)||chess_board[xj][yj]==B(銀)||chess_board[xj][yj]==B(金)||chess_board[xj][yj]==B(玉)||chess_board[xj][yj]==B(角)){
+					restart=1;			
+				}
+				else if(isStandard!=0){
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
+					chess_board[xi][yi]="  ";
+					chess_board[xj][yj]=B(飛);
+					restart=0;	
 				} 
-			}
-			if((yi==yj||xi==xj)&&isStandard==1){
-				chess_board[xi][yi]="  ";
-				chess_board[xj][yj]=B(飛);
-				push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
-			}
-			else{
-				restart =1;
 			}
 		}
 	}
@@ -631,54 +644,48 @@ void red_rule(){
 					restart=1;
 				}
 				else{
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 					chess_board[xi][yi]="  ";
 					chess_board[xj][yj]=R(步);
-					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 				}
 			}
 			else{
 				restart=1;
 			}	
 		}
-		//B(香)
+		//R(香)
 		if(chess_board[xi][yi]==R(香)){
-			if(yi!=yj){
+			if(yi!=yj||xj<=xi){
 				restart=1;
 			}
 			else{
 				for(int i=xi+1;i<xj;i++){
 					if(chess_board[i][yi]!="  "){
-						isStandard =0;
-					}
-				} 
-				for(int i=xi-1;i>xj;i--){
-					if(chess_board[i][yi]!="  "){
-						isStandard =0;
+						restart=1;
+						isStandard=0;
 					}
 				} 
 				if(chess_board[xj][yi]==R(步)||chess_board[xj][yi]==R(香)||chess_board[xj][yi]==R(桂)||chess_board[xj][yi]==R(銀)||chess_board[xj][yi]==R(金)||chess_board[xj][yi]==R(玉)||chess_board[xj][yi]==R(角)||chess_board[xj][yi]==R(飛)){
-					isStandard =0;
+					restart=1;
 				}  
-				if(isStandard ==1){
+				else if(isStandard!=0){
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 					chess_board[xi][yi]="  ";
 					chess_board[xj][yj]=R(香);
-					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
-				}
-				else{
-					restart =1;
+					restart=0;
 				}
 			}
 		}
 		//R(桂)
 		if(chess_board[xi][yi]==R(桂)){
 			if((xj==xi+2&&yj==yi-1)||(xj==xi+2&&yj==yi+1)){
-				if(chess_board[xj][yi]==R(步)||chess_board[xj][yi]==R(香)||chess_board[xj][yi]==R(桂)||chess_board[xj][yi]==R(銀)||chess_board[xj][yi]==R(金)||chess_board[xj][yi]==R(玉)||chess_board[xj][yi]==R(角)||chess_board[xj][yi]==R(飛)){
+				if(chess_board[xj][yj]==R(步)||chess_board[xj][yj]==R(香)||chess_board[xj][yj]==R(桂)||chess_board[xj][yj]==R(銀)||chess_board[xj][yj]==R(金)||chess_board[xj][yj]==R(玉)||chess_board[xj][yj]==R(角)||chess_board[xj][yj]==R(飛)){
 					restart=1;
 				}
 				else{
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 					chess_board[xi][yi]="  ";
 					chess_board[xj][yj]=R(桂);
-					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 				}
 			}
 			else{
@@ -693,9 +700,9 @@ void red_rule(){
 					restart=1;
 				}
 				else{
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 					chess_board[xi][yi]="  ";
 					chess_board[xj][yj]=R(銀);
-					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 				}
 			}
 			else{
@@ -709,9 +716,9 @@ void red_rule(){
 					restart=1;
 				}
 				else{
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 					chess_board[xi][yi]="  ";
 					chess_board[xj][yj]=R(金);
-					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 				}
 			}
 			else{
@@ -725,9 +732,9 @@ void red_rule(){
 					restart=1;
 				}
 				else{
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 					chess_board[xi][yi]="  ";
 					chess_board[xj][yj]=R(玉);
-					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
 				}
 			}
 			else{
@@ -736,51 +743,52 @@ void red_rule(){
 		}
 		//R(角)
 		if(chess_board[xi][yi]==R(角)){
-			if(abs(yj-yi)==0){
+			int i,j;
+			if(yj-yi==0){
 				restart =1;
 			}
-			else{
-				if(abs(xj-xi)/abs(yj-yi)==1){
-					int i,j;
-					if(yi>yi){
-						for(i=xi-1,j=yi+1;i>xj;i--,j++){
-							if(chess_board[i][j]!="  "){
-								isStandard =0;
-							}
-						}
-						for(i=xi+1,j=yi+1;i<xj;i++,j++){
-							if(chess_board[i][j]!="  "){
-								isStandard =0;
-							}
+			else if(abs(xj-xi)/abs(yj-yi)==1){
+				if(yj>yi){
+					//右上
+					for(i=xi-1,j=yi+1;i>xj;i--,j++){
+						if(chess_board[i][j]!="  "){
+							restart=1;
+							isStandard =0;
 						}
 					}
-					else if(yj<yi){
-						for(i=xi-1,j=yi+1;i>xj;i--,j--){
-							if(chess_board[i][j]!="  "){
-								isStandard =0;
-							}
+					//右下
+					for(i=xi+1,j=yi+1;i<xj;i++,j++){
+						if(chess_board[i][j]!="  "){
+							restart=1;
+							isStandard =0;
 						}
-						for(i=xi+1,j=yi+1;i<xj;i++,j--){
-							if(chess_board[i][j]!="  "){
-								isStandard =0;
-							}
-						}
-					}
-					if(chess_board[xj][yj]==R(步)||chess_board[xj][yj]==R(香)||chess_board[xj][yj]==R(桂)||chess_board[xj][yj]==R(銀)||chess_board[xj][yj]==R(金)||chess_board[xj][yj]==R(玉)||chess_board[xj][yj]==R(飛)){
-						isStandard =0;
-					}
-					if(isStandard==1){
-						chess_board[xi][yi]="  ";
-						chess_board[xj][yj]=R(角);
-						push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
-					}
-					else{
-						restart=1;
 					}
 				}
-				else{
+				else if(yj<yi){
+					for(i=xi-1,j=yi-1;i>xj;i--,j--){
+						if(chess_board[i][j]!="  "){
+							restart=1;
+							isStandard =0;
+						}
+					}
+					for(i=xi+1,j=yi-1;i<xj;i++,j--){
+						if(chess_board[i][j]!="  "){
+							restart=1;
+							isStandard =0;
+						}
+					}
+				}	
+				if(chess_board[xj][yj]==R(步)||chess_board[xj][yj]==R(香)||chess_board[xj][yj]==R(桂)||chess_board[xj][yj]==R(銀)||chess_board[xj][yj]==R(金)||chess_board[xj][yj]==R(玉)||chess_board[xj][yj]==R(飛)){
 					restart=1;
 				}
+				else if(isStandard!=0){
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
+					chess_board[xi][yi]="  ";
+					chess_board[xj][yj]=R(角);
+				}
+			}
+			else{
+				restart=1;
 			}
 		}
 		//R(飛)
@@ -788,42 +796,53 @@ void red_rule(){
 			//列座標不變
 			if(yi==yj){
 				for(int i=xi+1;i<xj;i++){
-					if(chess_board[i][yi]!="  "){
-						isStandard =0;
+					if(chess_board[xj][i]!="  "){
+						restart=1;
+						isStandard=0;
 					}
-				} 
+				}
 				for(int i=xi-1;i>xj;i--){
-					if(chess_board[i][yi]!="  "){
-						isStandard =0;
+					if(chess_board[i][yj]!="  "){
+						restart=1;
+						isStandard=0;					
 					}
 				} 
-				if(chess_board[xj][yi]==R(步)||chess_board[xj][yi]==R(香)||chess_board[xj][yi]==R(桂)||chess_board[xj][yi]==R(銀)||chess_board[xj][yi]==R(金)||chess_board[xj][yi]==R(玉)||chess_board[xj][yi]==R(角)){
-					isStandard =0;
+				if(chess_board[xj][yj]==R(步)||chess_board[xj][yj]==R(香)||chess_board[xj][yj]==R(桂)||chess_board[xj][yj]==R(銀)||chess_board[xj][yj]==R(金)||chess_board[xj][yj]==R(玉)||chess_board[xj][yj]==R(角)){
+					restart=1;
 				}  
+				else if(isStandard!=0){
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
+					chess_board[xi][yi]="  ";
+					chess_board[xj][yj]=R(飛);
+					restart=0;
+				}
 			}
 			//行座標不變
 			else if(xi==xj){
 				for(int i=yi+1;i<yj;i++){
-					if(chess_board[xi][i]!="  "){
-						isStandard =0;
+					if(chess_board[xj][i]!="  "){
+						restart=1;	
+						isStandard=0;		
 					}
 				} 
 				for(int i=yi-1;i>yj;i--){
-					if(chess_board[xi][i]!="  "){
-						isStandard =0;
+					if(chess_board[xj][i]!="  "){
+						restart=1;
+						isStandard=0;
 					}
 				} 
-				if(chess_board[xi][yj]==R(步)||chess_board[xi][yj]==R(香)||chess_board[xi][yj]==R(桂)||chess_board[xi][yj]==R(銀)||chess_board[xi][yj]==R(金)||chess_board[xi][yj]==R(玉)||chess_board[xi][yj]==R(角)){
-					isStandard =0;
-				} 
-			}
-			if((yi==yj||xi==xj)&&isStandard==1){
-				chess_board[xi][yi]="  ";
-				chess_board[xj][yj]=R(飛);
-				push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
+				if(chess_board[xj][yj]==R(步)||chess_board[xj][yj]==R(香)||chess_board[xj][yj]==R(桂)||chess_board[xj][yj]==R(銀)||chess_board[xj][yj]==R(金)||chess_board[xj][yj]==R(玉)||chess_board[xj][yj]==R(角)){
+					restart=1;					
+				}
+				else if(isStandard!=0){
+					push(xi,yi,xj,yj,chess_board[xi][yi],chess_board[xj][yj]);
+					chess_board[xi][yi]="  ";
+					chess_board[xj][yj]=R(飛);
+					restart=0;
+				}
 			}
 			else{
-				restart =1;
+				restart=1;
 			}
 		}
 	}
