@@ -35,6 +35,8 @@ typedef struct record{
 Record stack[STACKSIZE];
 //最上,-1為空
 int top=-1;
+//test 符號
+char SBL='A';
 //暫存
 Record * temp;
 //是否為空
@@ -149,14 +151,21 @@ int main(int argc,char *argv[]){
 					fprintf(fptr,"%d %d %d %d %s %s\n",stack[top].x1,stack[top].y1,stack[top].x2,stack[top].y2,stack[top].p0,stack[top].p1);
 				}
 			}
+			fprintf(fptr,"%c",SBL);
 		}
 		else{
 			return 0;
 		}
 	}
 	else if(NeworOld==1){
-		for(top=0;!feof(fptr);top++){
+		/*for(top=0;!feof(ptr);top++){
 			fscanf(fptr,"%d %d %d %d %s %s\n",&(stack[top].x1),&(stack[top].y1),&(stack[top].x2),&(stack[top].y2),(stack[top].p1),(stack[top].p0));
+		}*/
+		for(top=0;top<10;top++){
+			fscanf(fptr,"%d %d %d %d %s %s\n",&(stack[top].x1),&(stack[top].y1),&(stack[top].x2),&(stack[top].y2),(stack[top].p1),(stack[top].p0));
+		}
+		for(top=0;top<10;top++){
+			printf("%d %d %d %d %s %s\n",(stack[top].x1),(stack[top].y1),(stack[top].x2),(stack[top].y2),(stack[top].p1),(stack[top].p0));
 		}
 		InitGame();
 		PrintChess();
